@@ -37,6 +37,9 @@ hipcc \
 
 ./axpy
 
+ACTUAL_GPU=$(rocm_agent_enumerator | grep gfx | head -1)
+echo "Detected GPU: $ACTUAL_GPU"
+
 hipcc \
     -I../../../../Common \
     -I/opt/rocm/include \
