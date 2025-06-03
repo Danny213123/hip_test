@@ -25,3 +25,14 @@ mkdir build && cd build
 cmake .. -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc -DGPU_TARGETS=$ROCM_GPU
 make rocblas_level_1_axpy -j$(nproc)
 cd Libraries/rocBLAS/level_1/axpy && ./axpy
+
+hipcc \
+    -I../../../../Common \
+    -I/opt/rocm/include \
+    -L/opt/rocm/lib \
+    -lrocblas \
+    -lhip \
+    --offload-arch=gfx1032 \
+    main.cpp -o axpy
+
+./axpy
