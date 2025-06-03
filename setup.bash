@@ -36,3 +36,10 @@ hipcc \
     main.cpp -o axpy
 
 ./axpy
+
+hipcc \
+    -I../../../../Common \
+    -I/opt/rocm/include \
+    -L/opt/rocm/lib \
+    -lrocblas \
+    main.cpp -o axpy
