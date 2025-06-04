@@ -111,6 +111,43 @@ public:
             h_C[i] = 0.0f;
         }
         
+        // Display test vectors
+        std::cout << "\n=== Input Test Vectors ===" << std::endl;
+        std::cout << "Vector A pattern: 1.0 + (index % 100) * 0.01" << std::endl;
+        std::cout << "Vector B pattern: 2.0 + (index % 50) * 0.02" << std::endl;
+        
+        std::cout << "\nFirst 10 elements of Vector A:" << std::endl;
+        for (int i = 0; i < 10; i++) {
+            std::cout << "A[" << i << "] = " << std::fixed << std::setprecision(2) << h_A[i];
+            if ((i + 1) % 5 == 0) std::cout << std::endl;
+            else std::cout << ", ";
+        }
+        
+        std::cout << "\nFirst 10 elements of Vector B:" << std::endl;
+        for (int i = 0; i < 10; i++) {
+            std::cout << "B[" << i << "] = " << std::fixed << std::setprecision(2) << h_B[i];
+            if ((i + 1) % 5 == 0) std::cout << std::endl;
+            else std::cout << ", ";
+        }
+        
+        std::cout << "\nExpected results for first 10 elements (A + B):" << std::endl;
+        for (int i = 0; i < 10; i++) {
+            std::cout << "C[" << i << "] = " << std::fixed << std::setprecision(2) << (h_A[i] + h_B[i]);
+            if ((i + 1) % 5 == 0) std::cout << std::endl;
+            else std::cout << ", ";
+        }
+        
+        // Show pattern at different indices
+        std::cout << "\nSample elements at various indices:" << std::endl;
+        int sample_indices[] = {0, 50, 100, 500, 1000, 10000, 100000};
+        for (int idx : sample_indices) {
+            if (idx < N) {
+                std::cout << "Index " << std::setw(6) << idx << ": A=" << std::setprecision(2) 
+                          << h_A[idx] << ", B=" << h_B[idx] << ", Expected=" << (h_A[idx] + h_B[idx]) << std::endl;
+            }
+        }
+        std::cout << std::endl;
+        
         // Device memory allocation (marshalled)
         // AMD: Routes to hipMalloc() -> ROCm memory management
         // NVIDIA: Routes to hipMalloc() -> cudaMalloc()
