@@ -18,7 +18,7 @@
  */
 
 #include <hip/hip_runtime.h>
-#include <hip/hipblas.h>
+#include <hipblas/hipblas.h>
 #include <iostream>
 #include <chrono>
 #include <iomanip>
