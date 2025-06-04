@@ -1,20 +1,6 @@
 /**
  * HIP GPU Marshalling Demonstration
  * 
- * This example demonstrates how HIP (Heterogeneous-compute Interface for Portability)
- * provides seamless marshalling between AMD ROCm and NVIDIA CUDA platforms,
- * enabling organizations to:
- * 
- * 1. Avoid vendor lock-in
- * 2. Maximize hardware investment flexibility  
- * 3. Deploy the same codebase across different GPU architectures
- * 4. Maintain competitive procurement leverage
- * 
- * Key Business Value:
- * - Single codebase supports multiple GPU vendors
- * - No performance penalty for portability
- * - Future-proof against hardware market changes
- * - Reduced development and maintenance costs
  */
 
 #include <hip/hip_runtime.h>
@@ -30,9 +16,6 @@
 /**
  * GPU Marshalling Manager
  * 
- * Demonstrates how HIP acts as a marshalling layer that automatically
- * routes API calls to the appropriate backend (AMD ROCm or NVIDIA CUDA)
- * without requiring code changes.
  */
 class GPUMarshallingDemo {
 private:
@@ -50,14 +33,14 @@ public:
         std::cout << "Target Platform: " << PLATFORM_NAME << std::endl;
         std::cout << "Marshalling Strategy: " << BACKEND_DESCRIPTION << std::endl;
         
-        // Device detection (marshalled to appropriate runtime)
+        // Device detection
         hipError_t err = hipGetDeviceCount(&device_count);
         if (err != hipSuccess || device_count == 0) {
             std::cout << "❌ No compatible GPU devices found" << std::endl;
             return false;
         }
         
-        // Get device properties (marshalled)
+        // Get device properties
         hipGetDeviceProperties(&device_properties, 0);
         std::cout << "✓ Detected Device: " << device_properties.name << std::endl;
         std::cout << "✓ Compute Capability: " << device_properties.major 
@@ -66,9 +49,6 @@ public:
                   << (device_properties.totalGlobalMem / 1024.0 / 1024.0 / 1024.0) 
                   << " GB" << std::endl;
         
-        // Create BLAS handle (marshalled)
-        // AMD Platform: routes to rocblas_create_handle()
-        // NVIDIA Platform: routes to cublasCreate()
         hipblasStatus_t status = hipblasCreate(&blas_handle);
         if (status != HIPBLAS_STATUS_SUCCESS) {
             std::cout << "❌ Failed to create BLAS handle" << std::endl;
@@ -81,37 +61,31 @@ public:
     }
     
     /**
-     * Demonstrate vector addition using HIP BLAS marshalling
+     * Demonstrate vector addition using hipBLAS marshalling
      * 
-     * Business Value: Same code runs optimally on AMD and NVIDIA hardware
-     * Technical Value: Zero-overhead abstraction with automatic backend selection
      */
     void demonstrateVectorAddition() {
         std::cout << "=== Vector Addition via BLAS Marshalling ===" << std::endl;
-        
-        // Problem size - representative of real-world workloads
-        const int N = 1024 * 1024;  // 1M elements (4MB per vector)
+
+        const int N = 1024 * 1024;
         const size_t vector_size = N * sizeof(float);
         const double size_mb = vector_size / 1024.0 / 1024.0;
         
         std::cout << "Problem Size: " << N << " elements (" << std::fixed 
                   << std::setprecision(1) << size_mb << " MB per vector)" << std::endl;
         std::cout << "Total Memory: " << (size_mb * 3) << " MB (3 vectors)" << std::endl;
-        
-        // Host memory allocation
+
         float *h_A = new float[N];
         float *h_B = new float[N];
         float *h_C = new float[N];
-        
-        // Initialize test data
+
         std::cout << "\nInitializing test vectors..." << std::endl;
         for (int i = 0; i < N; i++) {
-            h_A[i] = 1.0f + (i % 100) * 0.01f;  // Varied input for realism
-            h_B[i] = 2.0f + (i % 50) * 0.02f;   // Varied input for realism
+            h_A[i] = 1.0f + (i % 100) * 0.01f;
+            h_B[i] = 2.0f + (i % 50) * 0.02f;
             h_C[i] = 0.0f;
         }
-        
-        // Display test vectors
+
         std::cout << "\n=== Input Test Vectors ===" << std::endl;
         std::cout << "Vector A pattern: 1.0 + (index % 100) * 0.01" << std::endl;
         std::cout << "Vector B pattern: 2.0 + (index % 50) * 0.02" << std::endl;
@@ -136,8 +110,7 @@ public:
             if ((i + 1) % 5 == 0) std::cout << std::endl;
             else std::cout << ", ";
         }
-        
-        // Show pattern at different indices
+
         std::cout << "\nSample elements at various indices:" << std::endl;
         int sample_indices[] = {0, 50, 100, 500, 1000, 10000, 100000};
         for (int idx : sample_indices) {
@@ -147,14 +120,11 @@ public:
             }
         }
         std::cout << std::endl;
-        
-        // Device memory allocation (marshalled)
-        // AMD: Routes to hipMalloc() -> ROCm memory management
-        // NVIDIA: Routes to hipMalloc() -> cudaMalloc()
+
         float *d_A, *d_B, *d_C;
-        const float alpha = 1.0f;  // Declare all variables at the top
+        const float alpha = 1.0f;
         auto start_time = std::chrono::high_resolution_clock::now();
-        auto compute_start = start_time;  // Initialize to avoid uninitialized variable issues
+        auto compute_start = start_time;
         auto compute_end = start_time;
         auto transfer_time = start_time;
         auto end_time = start_time;
@@ -163,38 +133,26 @@ public:
         hipMalloc((void**)&d_B, vector_size);
         hipMalloc((void**)&d_C, vector_size);
         
-        // Data transfer (marshalled)
-        // AMD: Uses ROCm memory transfer mechanisms
-        // NVIDIA: Uses CUDA memory transfer mechanisms
         hipMemcpy(d_A, h_A, vector_size, hipMemcpyHostToDevice);
         hipMemcpy(d_B, h_B, vector_size, hipMemcpyHostToDevice);
         
         transfer_time = std::chrono::high_resolution_clock::now();
         
         std::cout << "✓ Memory allocated and data transferred to GPU" << std::endl;
-        
-        // Vector Addition using BLAS operations (marshalled)
+
         std::cout << "\nPerforming vector addition: C = A + B" << std::endl;
         std::cout << "Method: BLAS Copy + SAXPY operations" << std::endl;
-        
-        // Step 1: Copy A to C (marshalled)
-        // AMD: Routes to rocblas_scopy()
-        // NVIDIA: Routes to cublasScopy()
+
         hipblasStatus_t status = hipblasScopy(blas_handle, N, d_A, 1, d_C, 1);
         if (status != HIPBLAS_STATUS_SUCCESS) {
             std::cout << "❌ hipblasScopy failed" << std::endl;
             goto cleanup;
         }
-        
-        // Step 2: Add B to C using SAXPY (marshalled)  
-        // SAXPY: Y = alpha*X + Y (C = 1.0*B + C)
-        // AMD: Routes to rocblas_saxpy()
-        // NVIDIA: Routes to cublasSaxpy()
+
         compute_start = std::chrono::high_resolution_clock::now();
         
         status = hipblasSaxpy(blas_handle, N, &alpha, d_B, 1, d_C, 1);
-        
-        // Synchronize to measure compute time accurately (marshalled)
+
         hipDeviceSynchronize();
         compute_end = std::chrono::high_resolution_clock::now();
         
@@ -202,8 +160,7 @@ public:
             std::cout << "❌ hipblasSaxpy failed" << std::endl;
             goto cleanup;
         }
-        
-        // Retrieve results (marshalled)
+
         hipMemcpy(h_C, d_C, vector_size, hipMemcpyDeviceToHost);
         end_time = std::chrono::high_resolution_clock::now();
         
@@ -224,15 +181,13 @@ public:
                   << (N * 2 / compute_time / 1e9) << " GFLOPS" << std::endl;
         std::cout << "Memory Bandwidth: " << std::setprecision(1)
                   << (vector_size * 3 / transfer_overhead / 1e9) << " GB/s" << std::endl;
-        
-        // Verify Results
+
         std::cout << "\n=== Result Verification ===" << std::endl;
         bool correct = true;
         double max_error = 0.0;
         int error_count = 0;
-        
-        // Check a representative sample
-        for (int i = 0; i < N; i += 1000) {  // Sample every 1000th element
+
+        for (int i = 0; i < N; i += 1000) {
             float expected = h_A[i] + h_B[i];
             float error = abs(h_C[i] - expected);
             if (error > 1e-5) {
@@ -245,8 +200,7 @@ public:
         std::cout << "✓ Sampled " << (N/1000) << " elements for verification" << std::endl;
         std::cout << "✓ Maximum error: " << std::scientific << max_error << std::endl;
         std::cout << "✓ Result accuracy: " << (correct ? "PASSED" : "FAILED") << std::endl;
-        
-        // Show sample results
+
         std::cout << "\n=== Sample Results ===" << std::endl;
         std::cout << "First 5 results:" << std::endl;
         for (int i = 0; i < 5; i++) {
@@ -255,9 +209,6 @@ public:
         }
         
 cleanup:
-        // Cleanup (marshalled)
-        // AMD: ROCm memory deallocation
-        // NVIDIA: CUDA memory deallocation
         hipFree(d_A); hipFree(d_B); hipFree(d_C);
         delete[] h_A; delete[] h_B; delete[] h_C;
         
@@ -265,38 +216,10 @@ cleanup:
     }
     
     /**
-     * Display business value summary
-     */
-    void displayBusinessValue() {
-        std::cout << "=== Business Value Summary ===" << std::endl;
-        std::cout << "HIP Marshalling provides:" << std::endl;
-        std::cout << "\n📈 Strategic Benefits:" << std::endl;
-        std::cout << "  ✓ Vendor Independence - No GPU vendor lock-in" << std::endl;
-        std::cout << "  ✓ Cost Optimization - Competitive hardware procurement" << std::endl;
-        std::cout << "  ✓ Risk Mitigation - Future-proof against market changes" << std::endl;
-        std::cout << "  ✓ Technology Agility - Adapt to new architectures quickly" << std::endl;
-        
-        std::cout << "\n💻 Technical Benefits:" << std::endl;
-        std::cout << "  ✓ Single Codebase - Write once, run anywhere" << std::endl;
-        std::cout << "  ✓ Zero Overhead - No performance penalty for portability" << std::endl;
-        std::cout << "  ✓ Native Performance - Backend-optimized execution" << std::endl;
-        std::cout << "  ✓ Familiar APIs - Easy adoption for CUDA developers" << std::endl;
-        
-        std::cout << "\n💰 Economic Benefits:" << std::endl;
-        std::cout << "  ✓ Reduced Development Costs - Single codebase maintenance" << std::endl;
-        std::cout << "  ✓ Hardware Flexibility - Best price/performance selection" << std::endl;
-        std::cout << "  ✓ Cloud Portability - Move between different GPU offerings" << std::endl;
-        std::cout << "  ✓ Competitive Leverage - Multiple vendor options" << std::endl;
-    }
-    
-    /**
      * Cleanup resources
      */
     void cleanup() {
         if (blas_handle) {
-            // Destroy BLAS handle (marshalled)
-            // AMD: Routes to rocblas_destroy_handle()
-            // NVIDIA: Routes to cublasDestroy()
             hipblasDestroy(blas_handle);
             std::cout << "✓ BLAS resources cleaned up" << std::endl;
         }
@@ -316,7 +239,6 @@ cleanup:
 int main() {
     std::cout << "======================================================" << std::endl;
     std::cout << "    HIP GPU Marshalling Demonstration" << std::endl;
-    std::cout << "    Breaking GPU Vendor Lock-in with Portability" << std::endl;
     std::cout << "======================================================\n" << std::endl;
     
     GPUMarshallingDemo demo;
@@ -330,9 +252,6 @@ int main() {
     try {
         // Demonstrate core marshalling capabilities
         demo.demonstrateVectorAddition();
-        
-        // Display business value
-        demo.displayBusinessValue();
         
         // Cleanup
         demo.cleanup();
@@ -355,30 +274,3 @@ int main() {
     
     return 0;
 }
-
-/*
-=== Compilation Instructions ===
-
-For AMD GPUs (ROCm backend):
-export HIP_PLATFORM=amd
-/opt/rocm/bin/hipcc -O3 -I/opt/rocm/include -L/opt/rocm/lib \
-    -lhipblas hip_marshalling_demo.cpp -o hip_marshalling_demo
-
-For NVIDIA GPUs (CUDA backend):  
-export HIP_PLATFORM=nvidia
-/opt/rocm/bin/hipcc -O3 -I/opt/rocm/include -L/opt/rocm/lib \
-    -lhipblas hip_marshalling_demo.cpp -o hip_marshalling_demo
-
-Run the demonstration:
-LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH ./hip_marshalling_demo
-
-=== Expected Output ===
-The program will demonstrate:
-1. Automatic platform detection and initialization
-2. Vector addition using marshalled BLAS operations
-3. Performance metrics and verification
-4. Business value summary
-
-The same executable runs optimally on both AMD and NVIDIA hardware,
-demonstrating the power of HIP's marshalling capabilities.
-*/
