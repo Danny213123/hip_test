@@ -46,3 +46,16 @@ hipcc \
     -L/opt/rocm/lib \
     -lrocblas \
     main.cpp -o axpy
+
+export HIP_PATH=/opt/rocm
+export PATH=/opt/rocm/bin:$PATH
+export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
+export C_INCLUDE_PATH=/opt/rocm/include:$C_INCLUDE_PATH
+export CPLUS_INCLUDE_PATH=/opt/rocm/include:$CPLUS_INCLUDE_PATH
+export HIP_PLATFORM=amd
+
+# Now compile normally
+hipcc hip_marshalling.cpp -lhipblas -lhipfft -o hip_marshalling
+
+# Run the program
+./hip_marshalling
