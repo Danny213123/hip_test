@@ -115,7 +115,11 @@ public:
         // AMD: Routes to hipMalloc() -> ROCm memory management
         // NVIDIA: Routes to hipMalloc() -> cudaMalloc()
         float *d_A, *d_B, *d_C;
+        const float alpha = 1.0f;  // Declare all variables at the top
         auto start_time = std::chrono::high_resolution_clock::now();
+        auto compute_start = start_time;  // Initialize to avoid uninitialized variable issues
+        auto compute_end = start_time;
+        auto transfer_time = start_time;
         
         hipMalloc((void**)&d_A, vector_size);
         hipMalloc((void**)&d_B, vector_size);
@@ -127,7 +131,7 @@ public:
         hipMemcpy(d_A, h_A, vector_size, hipMemcpyHostToDevice);
         hipMemcpy(d_B, h_B, vector_size, hipMemcpyHostToDevice);
         
-        auto transfer_time = std::chrono::high_resolution_clock::now();
+        transfer_time = std::chrono::high_resolution_clock::now();
         
         std::cout << "✓ Memory allocated and data transferred to GPU" << std::endl;
         
@@ -148,14 +152,13 @@ public:
         // SAXPY: Y = alpha*X + Y (C = 1.0*B + C)
         // AMD: Routes to rocblas_saxpy()
         // NVIDIA: Routes to cublasSaxpy()
-        const float alpha = 1.0f;
-        auto compute_start = std::chrono::high_resolution_clock::now();
+        compute_start = std::chrono::high_resolution_clock::now();
         
         status = hipblasSaxpy(blas_handle, N, &alpha, d_B, 1, d_C, 1);
         
         // Synchronize to measure compute time accurately (marshalled)
         hipDeviceSynchronize();
-        auto compute_end = std::chrono::high_resolution_clock::now();
+        compute_end = std::chrono::high_resolution_clock::now();
         
         if (status != HIPBLAS_STATUS_SUCCESS) {
             std::cout << "❌ hipblasSaxpy failed" << std::endl;
