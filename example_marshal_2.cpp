@@ -273,12 +273,19 @@ int main() {
         
         std::cout << "\n=== Marshalling Demonstration Complete ===" << std::endl;
         std::cout << "Platform: " << demo.getPlatformInfo() << std::endl;
+        std::cout << "✓ All operations successfully marshalled" << std::endl;
+        std::cout << "✓ Same source code, optimized for target platform" << std::endl;
+        std::cout << "✓ Ready for production deployment" << std::endl;
         
     } catch (const std::exception& e) {
         std::cerr << "❌ Error during demonstration: " << e.what() << std::endl;
         demo.cleanup();
         return -1;
     }
+    
+    std::cout << "\n======================================================" << std::endl;
+    std::cout << "HIP: Your path to GPU vendor independence" << std::endl;
+    std::cout << "======================================================" << std::endl;
     
     return 0;
 }
