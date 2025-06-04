@@ -18,7 +18,7 @@
  */
 
 #include <hip/hip_runtime.h>
-#include <hipblas/hipblas.h>
+#include <hipblas.h>
 #include <iostream>
 #include <chrono>
 #include <iomanip>
@@ -120,6 +120,7 @@ public:
         auto compute_start = start_time;  // Initialize to avoid uninitialized variable issues
         auto compute_end = start_time;
         auto transfer_time = start_time;
+        auto end_time = start_time;
         
         hipMalloc((void**)&d_A, vector_size);
         hipMalloc((void**)&d_B, vector_size);
@@ -167,7 +168,7 @@ public:
         
         // Retrieve results (marshalled)
         hipMemcpy(h_C, d_C, vector_size, hipMemcpyDeviceToHost);
-        auto end_time = std::chrono::high_resolution_clock::now();
+        end_time = std::chrono::high_resolution_clock::now();
         
         // Performance Analysis
         auto total_time = std::chrono::duration<double>(end_time - start_time).count();
@@ -227,6 +228,31 @@ cleanup:
     }
     
     /**
+     * Display business value summary
+     */
+    void displayBusinessValue() {
+        std::cout << "=== Business Value Summary ===" << std::endl;
+        std::cout << "HIP Marshalling provides:" << std::endl;
+        std::cout << "\n📈 Strategic Benefits:" << std::endl;
+        std::cout << "  ✓ Vendor Independence - No GPU vendor lock-in" << std::endl;
+        std::cout << "  ✓ Cost Optimization - Competitive hardware procurement" << std::endl;
+        std::cout << "  ✓ Risk Mitigation - Future-proof against market changes" << std::endl;
+        std::cout << "  ✓ Technology Agility - Adapt to new architectures quickly" << std::endl;
+        
+        std::cout << "\n💻 Technical Benefits:" << std::endl;
+        std::cout << "  ✓ Single Codebase - Write once, run anywhere" << std::endl;
+        std::cout << "  ✓ Zero Overhead - No performance penalty for portability" << std::endl;
+        std::cout << "  ✓ Native Performance - Backend-optimized execution" << std::endl;
+        std::cout << "  ✓ Familiar APIs - Easy adoption for CUDA developers" << std::endl;
+        
+        std::cout << "\n💰 Economic Benefits:" << std::endl;
+        std::cout << "  ✓ Reduced Development Costs - Single codebase maintenance" << std::endl;
+        std::cout << "  ✓ Hardware Flexibility - Best price/performance selection" << std::endl;
+        std::cout << "  ✓ Cloud Portability - Move between different GPU offerings" << std::endl;
+        std::cout << "  ✓ Competitive Leverage - Multiple vendor options" << std::endl;
+    }
+    
+    /**
      * Cleanup resources
      */
     void cleanup() {
@@ -267,6 +293,9 @@ int main() {
     try {
         // Demonstrate core marshalling capabilities
         demo.demonstrateVectorAddition();
+        
+        // Display business value
+        demo.displayBusinessValue();
         
         // Cleanup
         demo.cleanup();
