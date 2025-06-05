@@ -31,11 +31,10 @@ hipcc \
     -I/opt/rocm/include \
     -L/opt/rocm/lib \
     -lrocblas \
-    -lhip \
     --offload-arch=gfx1032 \
-    main.cpp -o axpy
+    main.cpp -o main
 
-./axpy
+./main
 
 ACTUAL_GPU=$(rocm_agent_enumerator | grep gfx | head -1)
 echo "Detected GPU: $ACTUAL_GPU"
